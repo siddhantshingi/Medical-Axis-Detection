@@ -1,7 +1,7 @@
 import numpy as np
 import cv2 as cv
 import math
-cap = cv.VideoCapture('1.mp4')
+cap = cv.VideoCapture('./Assignment1/1.mp4')
 # frame_width = int(cap.get(3))
 # frame_height = int(cap.get(4))
 # fourcc = cv.VideoWriter_fourcc(*'MJPG')
@@ -15,6 +15,7 @@ kernal_hitmiss = np.ones((20,20),np.uint8)
 scale = 1
 delta = 0
 ddepth = cv.CV_16S
+yavg=0
 while(1):
     ret, frame = cap.read()
     frame = cv.GaussianBlur(frame, (3, 3), 0)
@@ -40,7 +41,10 @@ while(1):
     grad = cv.addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0)
 
     lines = cv.HoughLinesP(grad,1,np.pi/180,125,0,0)
-    
+    prevx1=0 
+    prevy1=0
+    prevx2=0
+    prevy2=0
     minx=10000
     maxx=0
     miny=10000
@@ -99,6 +103,7 @@ while(1):
         y2_avg = y2_sum/count_avg
         minyavg=minyavg/count_avg
         maxyavg=maxyavg/count_avg
+        
         if (count != 0):
             slope = slope/count
         if(minx!=10000):
@@ -109,7 +114,16 @@ while(1):
                 cv.line(frame,(x2_min,y2_min),(x2_min + 2,y2_min + 2),(255,0,0),5)
                 cv.line(frame,(x2_max,y2_max),(x2_max + 2,y2_max + 2),(255,0,0),5)
                 # cv.line(frame,(x1_avg,minyavg),(x2_avg,maxyavg),(0,0,255),7)
-                cv.line(frame,(x1_avg-(minyavg*(x2_avg-x1_avg)/(maxyavg-minyavg)),0),(x2_avg,maxyavg),(0,0,255),7)
+                if(yavg==0):
+                    yavg=maxyavg
+                    cv.line(frame,(x1_avg-(minyavg*(x2_avg-x1_avg)/(maxyavg-minyavg)),0),(x2_avg,maxyavg),(0,0,255),7)
+                else:
+                    # print yavg," ",maxyavg
+                    # if((maxyavg-yavg>50) or (yavg-maxyavg>50)):
+                    #     yavg=maxyavg
+                    yavg=(yavg+maxyavg)/2
+                    cv.line(frame,(x1_avg-(minyavg*(x2_avg-x1_avg)/(maxyavg-minyavg)),0),(x1_avg+((yavg-minyavg)*(x2_avg-x1_avg)/(maxyavg-minyavg)),yavg),(0,0,255),7)
+                print yavg," ",maxyavg
             elif(slope<0):
                 # cv.line(frame,(minx,maxy),(maxx,miny),(0,255,0),2)
                 cv.line(frame,(x1_min,y1_min),(x1_min + 2,y1_min + 2),(255,0,0),5)
@@ -117,7 +131,16 @@ while(1):
                 cv.line(frame,(x2_min,y2_min),(x2_min + 2,y2_min + 2),(255,0,0),5)
                 cv.line(frame,(x2_max,y2_max),(x2_max + 2,y2_max + 2),(255,0,0),5)
                 # cv.line(frame,(x1_avg,maxyavg),(x2_avg,minyavg),(0,0,255),7)
-                cv.line(frame,(x1_avg,maxyavg),(x2_avg-(minyavg*(x1_avg-x2_avg)/(maxyavg-minyavg)),0),(0,0,255),7)
+                if(yavg==0):
+                    yavg=maxyavg
+                    cv.line(frame,(x1_avg,maxyavg),(x2_avg-(minyavg*(x1_avg-x2_avg)/(maxyavg-minyavg)),0),(0,0,255),7)
+                else:
+                    # print yavg," ",maxyavg
+                    # if((maxyavg-yavg>50) or (yavg-maxyavg>50)):
+                    #     yavg=maxyavg
+                    yavg=(yavg+maxyavg)/2
+                    cv.line(frame,(x2_avg+((yavg-minyavg)*(x1_avg-x2_avg)/(maxyavg-minyavg)),yavg),(x2_avg-(minyavg*(x1_avg-x2_avg)/(maxyavg-minyavg)),0),(0,0,255),7)
+                print yavg," ",maxyavg
             else:
                 # cv.line(frame,(((maxx+minx)/2),maxy),(((maxx+minx)/2),miny),(0,255,0),2)
                 cv.line(frame,(x1_avg,0),(x2_avg,maxyavg),(0,0,255),7)
